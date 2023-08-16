@@ -1,0 +1,171 @@
+{% extends "App/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="content-section">
+    <div class="media-body">
+      <legend class="border-bottom mb-4">{{ country }}</legend>
+      <h2 class="account-heading">Country Trade Graphs</h2>
+      <p class="text-secondary">Graphs show the rates that are being placed on you by the countries in the legend. <span style="float:right;" data-toggle="tooltip" title="We also show you the tariffs and other economic foreign policies other country have on a country. You can choose which country to look at with the same selector from the Country-Based Debt and Budget Graph.">ℹ️ </span></p>
+
+          {% for name in graphs %}
+            
+          <canvas id={{ name }}></canvas>
+        
+          {% endfor %}
+          <span style="float:right;" data-toggle="tooltip" title="This is a replica of the graph you can see on your own Government Budget page, except you can change which country to look at. Simply select a country in the selector at the bottom of this graph.">ℹ️ </span>
+<br>
+           <form method="POST">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Budget Graphs</legend>
+                {{ GraphInterface|crispy }}
+            </fieldset>
+            <div class="form-group">
+                <button class="btn btn-outline-info" type="submit" id="submit">Change Graph Mode</button>
+            </div>
+        </form>
+      <legend class="border-bottom mb-4">Tariffs <span style="float:right;" data-toggle="tooltip" title="This wouldn't be War by Other Means, without those other means, so here they are. Although I should not that because of trade, even domestic economic developments can and have an effect on other players, although not quite as large and certainly not quite as closely targeted as these policies. Which are:
+
+- Import Tariffs (TariffAm) levy a tax on all goods imported from a given country. That tax is added on top of the good's price, so a 50% tariff would multiply the price by 1.5
+- Export Tariffs (SanctionAm) are the same as Import Tariffs, only the tax is put on goods leaving your country and going to that other country
+- Sending Money (SendMoney) is pretty straightforward, although note that you send money at current exchange rates. To get the exchange rate, multiply how many $ you get per unit of your currency (you can see that in the exchange rate chart), and then divide by the other player's exchange rate. The money you're sending is listed in your currency
+- Sending Military Equipment (MilitarySend) is actually pretty straightforward. You just send it, and the other player can use it in the same turn as the one where you sent it
+- Nationalization will take some or all of the say  French-owned capital (i.e. investment goods) in your country, to citizens of your own country. That is, if you select the Nationalization policy in regards to France of course. If the value you enter is 100% (default), nothing is nationalized. If it's 90%, then 90% will remain after this year (i.e. 10% is nationalized every year), etc, all the way to 0% nationalizing everything.">ℹ️ </span></legend>
+      <form method="POST">
+    {% csrf_token %}
+    {{ indForms.management_form }}
+      {% for form in indForms %}
+          <legend class="border-bottom mb-4">{{ tariff_titles|get_item:forloop.counter }}</legend>
+          {{ form |crispy }}
+      {% endfor %}
+      <br>
+      <div class="form-group">
+          <button class="btn btn-outline-info" type="submit" id="Tarriff" value="Tarriff">Submit Tariff Changes</button>
+      </div>
+          <h2 class="account-heading">Multiple Player Graphs</h2>
+          <p class="text-secondary">Current Year: {{ CurrentYear }}</p>
+    </div>
+  </form>
+  <span style="float:right;" data-toggle="tooltip" title="This graph shows how much each country exports to what country, and how much it imports from what country. On the left you can see the total exports of a given country, on the right the total imports.">ℹ️ </span>
+  <br>
+    {% include 'App/graphs/trade.html' %}
+    <span style="float:right;" data-toggle="tooltip" title="Here you can see the exchange rates of each country, relative to a fictional country outside of the map. To figure out how many British Pounds you can get per German Mark, simply divide how many $ you can get per German Mark (that's the value that's shown on the graph) , and divide it by how many $ it takes to buy one British Pound.">ℹ️ </span>
+    <br>
+    {% include 'App/graphs/exchange.html' %}
+    <span style="float:right;" data-toggle="tooltip" title="While the Foreign Investment Abroad graph shows you where your citizens' have invested the money they've invested outside of your borders, they have invested in which country. Foreign Investment Domestic shows you which foreign countries have invested how much in your borders.">ℹ️ </span>
+    <br>
+    {% for title in titles %}
+      <p class="text-secondary">{{ title }}</p>
+    {% endfor %}
+    <!-- {% for title in titles %}
+      <p class="text-secondary">{{ title }}</p>
+    {% endfor %} -->
+
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script type="text/javascript">
+  
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+
+function handleClick(e, legendItem, legend) {
+    const index = legendItem.datasetIndex;
+    const ci = legend.chart;
+    var count = 0
+    for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+            if (!ci.isDatasetVisible(i)) {
+              count++;
+            }
+        }
+    if (ci.isDatasetVisible(index) && count == legend.chart.data.datasets.length - 1) {
+      for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+            ci.show(i);
+        }
+        legendItem.hidden = false;
+    } else if (ci.isDatasetVisible(index)) {
+        for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+          if (i != legendItem.datasetIndex) {
+            ci.hide(i);
+          }
+        }
+        legendItem.hidden = true;
+    } else {
+        ci.show(index);
+        legendItem.hidden = false;
+    }
+}
+
+
+// Removes the alpha channel from background colors
+function handleLeave(evt, item, legend) {
+  for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+    legend.chart.show(i) //.data.datasets[i].borderColor = legend.chart.data.datasets[i].borderColor.replace(/[^,]+(?=\))/, '1.0')
+  }
+  legend.chart.update();
+}
+
+var graph_dict = {{graph_dict|safe}};
+var graph_array = [];
+var index = 0;
+for (const title of graph_dict['title']) {
+  var dataset = [];
+  for (var i=0; i < graph_dict['line_titles'][index].length; i++) {
+    const temp = {
+      label: graph_dict['line_titles'][index][i],
+      data: graph_dict['data'][index][i],
+      fill: false,
+      borderColor: graph_dict['colors'][index][i],
+      tension: 0.1
+    };
+    dataset.push(temp);
+  };
+  var data5 = {
+  labels: {{ labels|safe }},
+  datasets: dataset
+  };
+  var graph = {
+  type: 'line',
+  data: data5,
+  options: {
+        responsive: true,
+        
+        plugins: {
+          title: {
+            display: true,
+            text: title
+        },
+        legend: {
+                labels: {
+                  font: {
+                        size: 8
+                    }
+                },
+                position:'right',
+                onClick: handleClick
+              },
+      },
+        
+
+    }
+  };
+  graph_array.push(graph);
+  index += 1;
+};
+
+window.onload = function() {
+      var index = 0;
+      for (const graph of graph_array) {
+        var ctx = document.getElementById(graph_dict['title'][index]).getContext('2d');
+        window.goods = new Chart(ctx, graph);
+        index += 1;
+      };
+    };
+
+    $(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+{% endblock extra_js %}

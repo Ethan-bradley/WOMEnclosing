@@ -1,0 +1,2 @@
+cd Desktop/WOMEnclosing/
+./dist/WOM/WOM runserver --noreload

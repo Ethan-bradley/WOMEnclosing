@@ -1,0 +1,12 @@
+{
+  "base_url": "/",
+  "hostname": "localhost",
+  "notebook_dir": "/Users/ethanbradley/Downloads",
+  "password": false,
+  "pid": 72465,
+  "port": 8888,
+  "secure": false,
+  "sock": "",
+  "token": "131e30c4dcfb0b7831d4491c94e6cef2cf3474802973b12b",
+  "url": "http://localhost:8888/"
+}

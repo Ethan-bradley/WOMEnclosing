@@ -1,0 +1,12 @@
+{
+  "base_url": "/",
+  "hostname": "localhost",
+  "notebook_dir": "/Users/ethanbradley/Desktop/World/World2",
+  "password": false,
+  "pid": 1421,
+  "port": 8888,
+  "secure": false,
+  "sock": "",
+  "token": "c757a96fe52f812ee8031db35778883d5fe3c4cc6e246d9f",
+  "url": "http://localhost:8888/"
+}

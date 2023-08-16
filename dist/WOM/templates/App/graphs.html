@@ -1,0 +1,258 @@
+{% extends "App/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="content-section">
+    <div class="media-body">
+
+      <h2 class="account-heading">Budget Graphs <span style="float:right;" data-toggle="tooltip" title="Here you can see each country's budget items (taxes, expenditures), as well as the prices of individual goods over time; each of those graphs compares all countries. You can select which item to look at, via the selector that you can see at the bottom of this graph">ℹ️ </span></h2>
+
+      <legend class="border-bottom mb-4">{{ country }}</legend>
+           <canvas id={{ graphs.18 }}></canvas>
+           <form method="POST">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Budget Graphs</legend>
+                {{ GraphInterface|crispy }}
+            </fieldset>
+            <div class="form-group">
+                <button class="btn btn-outline-info" type="submit" id="submit">Change Graph Mode</button>
+            </div>
+        </form>
+          <h2 class="account-heading">Multiple Player Graphs <span style="float:right;" data-toggle="tooltip" title="On the Graphs page, we have a ton of charts about everything from Real GDP per capita over time, accounting for purchasing power parity (in $US) which you can see here, to unemployment, science, education, etc. Just look around, there's a lot to see.">ℹ️ </span></h2>
+          <p class="text-secondary">Current Year: {{ CurrentYear }}</p>
+
+          {% for name in graphs %}
+          
+          {% if name == 'Domestic_Unemployment' %}
+          <h2 class="account-heading">Domestic Graphs <span style="float:right;" data-toggle="tooltip" title="Here are the local economic data graphs for each of the hexes you control.">ℹ️ </span></h2>
+          {% endif %}
+
+          <canvas id={{ name }}></canvas>
+        
+          {% endfor %}
+
+           <h2 class="account-heading">Graphs</h2>
+        <div id="container" style="width: 75%;">
+      <canvas id="goods-chart"></canvas>
+        </div>
+        <div id="container" style="width: 75%;">
+      <canvas id="gdp-chart"></canvas>
+        </div>
+
+        <div id="container" style="width: 75%;">
+      <canvas id="growth-chart"></canvas>
+        </div>
+
+      <span style="float:right;" data-toggle="tooltip" title="Job Market Graphs- Here you can see the wages of different industries in your country, as well as the total number of jobs per industry in your country">ℹ️ </span>
+      <br>
+        </div>
+
+           {% include wageGraph %}
+           {% include jobGraph %}
+           {% include pricesGraph %}
+
+    </div>
+
+
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+
+<script type="text/javascript">
+
+function handleClick(e, legendItem, legend) {
+    const index = legendItem.datasetIndex;
+    const ci = legend.chart;
+    var count = 0
+    for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+            if (!ci.isDatasetVisible(i)) {
+              count++;
+            }
+        }
+    if (ci.isDatasetVisible(index) && count == legend.chart.data.datasets.length - 1) {
+      for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+            ci.show(i);
+        }
+        legendItem.hidden = false;
+    } else if (ci.isDatasetVisible(index)) {
+        for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+          if (i != legendItem.datasetIndex) {
+            ci.hide(i);
+          }
+        }
+        legendItem.hidden = true;
+    } else {
+        ci.show(index);
+        legendItem.hidden = false;
+    }
+}
+
+
+// Removes the alpha channel from background colors
+function handleLeave(evt, item, legend) {
+  for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+    legend.chart.show(i) //.data.datasets[i].borderColor = legend.chart.data.datasets[i].borderColor.replace(/[^,]+(?=\))/, '1.0')
+  }
+  legend.chart.update();
+}
+
+const data = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Capital',
+    data: {{ capital|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+var config = {
+  type: 'line',
+  data: data,
+  options: {
+        responsive: true
+      }
+};
+
+const data2 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Goods Production',
+    data: {{ GoodsProduction|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+var goods_graph = {
+  type: 'line',
+  data: data2,
+  options: {
+        responsive: true
+      }
+};
+const data3 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Real GDP',
+    data: {{ GDP|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+var gdp_graph = {
+  type: 'line',
+  data: data3,
+  options: {
+        responsive: true
+      }
+};
+const data4 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Real GDP Growth',
+    data: {{ growth|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+
+var growth2 = {
+  type: 'line',
+  data: data4,
+  options: {
+        responsive: true,
+        plugins: {
+            title: {
+                display: true,
+                text: 'Real GDP Growth'
+            },
+            legend: {
+              labels: {
+                size: 1
+              }
+            }
+
+        },
+      },
+};
+
+var graph_dict = {{graph_dict|safe}};
+var graph_array = [];
+var index = 0;
+for (const title of graph_dict['title']) {
+  var dataset = [];
+  for (var i=0; i < graph_dict['line_titles'][index].length; i++) {
+    const temp = {
+      label: graph_dict['line_titles'][index][i],
+      data: graph_dict['data'][index][i],
+      fill: false,
+      borderColor: graph_dict['colors'][index][i],
+      tension: 0.1
+    };
+    dataset.push(temp);
+  };
+  var data5 = {
+  labels: {{ labels|safe }},
+  datasets: dataset
+  };
+  var graph = {
+  type: 'line',
+  data: data5,
+  options: {
+        responsive: true,
+        
+        plugins: {
+          title: {
+            display: true,
+            text: title
+        },
+        legend: {
+                labels: {
+                  font: {
+                        size: 8
+                    }
+                },
+                position:'right',
+                onClick: handleClick
+              },
+      },
+        
+
+    }
+  };
+  graph_array.push(graph);
+  index += 1;
+};
+
+window.onload = function() {
+      var ctx = document.getElementById('goods-chart').getContext('2d');
+      window.goods = new Chart(ctx, goods_graph);
+      var ctx = document.getElementById('gdp-chart').getContext('2d');
+      window.gdp = new Chart(ctx, gdp_graph);
+      var ctx = document.getElementById('growth-chart').getContext('2d');
+      window.growth = new Chart(ctx, growth2);
+      var index = 0;
+      for (const graph of graph_array) {
+        var ctx = document.getElementById(graph_dict['title'][index]).getContext('2d');
+        window.goods = new Chart(ctx, graph);
+        index += 1;
+      };
+    };
+
+    $(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+
+</script>
+
+<!--Javascript-->
+
+{% endblock extra_js %}

@@ -1,0 +1,12 @@
+{
+  "base_url": "/",
+  "hostname": "localhost",
+  "notebook_dir": "/Users/ethanbradley/Downloads/Proj2_System_ID",
+  "password": false,
+  "pid": 8960,
+  "port": 8888,
+  "secure": false,
+  "sock": "",
+  "token": "48652b39fe8fd1b34530a2ea976bb8869c245f4f2ea831a6",
+  "url": "http://localhost:8888/"
+}

@@ -1,0 +1,12 @@
+{
+  "base_url": "/",
+  "hostname": "localhost",
+  "notebook_dir": "/Users/ethanbradley/Desktop/EE16B/Project3_Controls",
+  "password": false,
+  "pid": 23365,
+  "port": 8888,
+  "secure": false,
+  "sock": "",
+  "token": "9578bbc88c0b7b3127412c1b4e02e377be73f6079815786b",
+  "url": "http://localhost:8888/"
+}

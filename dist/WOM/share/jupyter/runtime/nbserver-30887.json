@@ -1,0 +1,12 @@
+{
+  "base_url": "/",
+  "hostname": "localhost",
+  "notebook_dir": "/Users/ethanbradley/Desktop",
+  "password": false,
+  "pid": 30887,
+  "port": 8888,
+  "secure": false,
+  "sock": "",
+  "token": "a612cbcb6e69a7089e1269e4809bda49edb612004bc95a6f",
+  "url": "http://localhost:8888/"
+}

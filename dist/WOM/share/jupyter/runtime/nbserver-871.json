@@ -1,0 +1,12 @@
+{
+  "base_url": "/",
+  "hostname": "localhost",
+  "notebook_dir": "/Users/ethanbradley/Desktop/EE16B/Lab2_DAC_ADC",
+  "password": false,
+  "pid": 871,
+  "port": 8888,
+  "secure": false,
+  "sock": "",
+  "token": "0cd51196438b809fc570175be1afe1271115d266c4b4401e",
+  "url": "http://localhost:8888/"
+}

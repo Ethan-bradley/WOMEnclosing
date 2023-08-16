@@ -1,0 +1,337 @@
+{% extends "App/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="content-section">
+    <legend class="border-bottom mb-4">{{ country }} <span style="float:right;" data-toggle="tooltip" title="On the Government Budget page, you can change your domestic policies, however you can also just keep the orders as is. Note that Money Printing is not a revenue source. When you are ready, you can submit your current domestic policies by clicking Submit Spending and Tax Plan. If you also want to run the next turn, you can/ need to select the Ready ✅ at the bottom of the page">ℹ️ </span> </legend>
+    <h2 class="account-heading">Projection Graphs</h2>
+           <h2 class="account-heading">Graphs</h2>
+           
+          {% for name in graphs %}
+            
+            <canvas id={{ name }}></canvas>
+        
+          {% endfor %}
+        <!-- <div id="container" style="width: 75%;">
+      <canvas id="goods-chart"></canvas>
+        </div>
+        <div id="container" style="width: 75%;">
+      <canvas id="unemployment-chart"></canvas>
+        </div>
+        <div id="container" style="width: 75%;">
+      <canvas id="gdp-chart"></canvas>
+        </div>
+        <div id="container" style="width: 75%;">
+      <canvas id="gdp-per-chart"></canvas>
+        </div>
+        <div id="container" style="width: 75%;">
+      <canvas id="growth-chart"></canvas>
+        </div>-->
+    <legend class="border-bottom mb-4">Individual Product Forms <span style="float:right;" data-toggle="tooltip" title="Specific to each good, you can also:
+- set an Export Restriction for each good. This limits what percentage of the yearly production of that good can be exported. 100% means all can be exported (but usually won't be), 0% means nothing can be exported
+- Subsidy amount given to a corporation within a specific industry (dollar amount).">ℹ️ </span>
+</legend>
+    <form method="POST">
+        {% csrf_token %}
+        <fieldset class="form-group">
+            <p class="text-secondary">All the subsidy values below must add to 1.</p>
+            {{ PFS.management_form }}
+            {% for form2 in PFS %}
+                <legend class="border-bottom mb-4">{{ product_title|get_item:forloop.counter }}</legend>
+                {{ form2 |crispy }}
+            {% endfor %}
+            <div class="media-body">
+              <h2 class="account-heading">Data</h2>
+               <h2 class="account-heading">Government Budget <span style="float:right;" data-toggle="tooltip" title="These two charts show you the projected budget balance for this next year. You can see the projected total expenditures and revenues in the text-based budget projection further down below">ℹ️ </span></h2>
+               {% include govBudget %}
+               {% include govRevenue %}
+               <p><span style="float:right;" data-toggle="tooltip" title="Here, the individual budget items are stacked, and shown over time: The thick black line in the middle is your total debt over time. Above that are your revenues, as stacked areas, and below that your expenditures. Below that graph, you can find a text-based budget projection - similarly to the expenditure/revenues pie charts - show you a projection for this next year">ℹ️ </span></p>
+               <br>
+               {% include BudgetGraph %}
+               <p class="text-secondary">Total Government Revenue: {{ GovMoney }}</p>
+               <p class="text-secondary">Total Government Revenue as % of GDP: {{ govRevenueGDP }}</p>
+               <p class="text-secondary">Government Expenditures as % of GDP: {{ govSpending }}</p>
+               <p class="text-secondary">Projected Government Budget Balance as % of GDP: {{ govBalance }}</p>
+               <p class="text-secondary">Net Government Savings as % of GDP: {{ GovDebt }}</p>
+               <p class="text-secondary">Net Government Savings: {{ GovSavings }}</p>
+               <p class="text-secondary">Current Year: {{ CurrentYear }}</p>
+            </div>
+            <legend class="border-bottom mb-4">Government Spending and Central Bank</legend>
+            <p class="text-secondary">Welfare, Education, Military, InfrastructureInvest, and ScienceInvest are all as % of GDP.</p>
+            <table>
+              <tbody>
+                <tr>
+                  <td data-toggle="tooltip" title="The Income Tax is simply a flat tax on income">{{ govForm.IncomeTax|as_crispy_field }} <td>
+                  <td data-toggle="tooltip" title="The Corporate Tax is a tax on the revenues of corporations">{{ govForm.CorporateTax|as_crispy_field }} <td>
+                  <td data-toggle="tooltip" title="Welfare works via a number of policies, such as pensions, unemployment benefits, etc, which are funded with this welfare budget item">{{ govForm.Welfare|as_crispy_field }} <td>
+                </tr>
+                <tr>
+                  <td data-toggle="tooltip" title="Education spending increases how much capital is available for education, as well as the money available for paying educators. Note that basically, a student only gets one year of education, after which they will enter the workforce with the education level of that year (you can see that in the education graph). So if the education graph goes down and up again, that doesn't mean the entire workforce just lost much of its education and regained it">{{ govForm.Education|as_crispy_field }} <td>
+                  <td data-toggle="tooltip" title="Military spending buys equipment, which you stockpile, and can use at any point to recruit an army. You also need military equipment to sustain your military">{{ govForm.Military|as_crispy_field }} <td>
+                  <td data-toggle="tooltip" title="Infrastructure spending buys steel and pays money to construction workers, to improve your country's infrastructure. This lowers transport costs for both your domestic and foreign trade. Corporations also invest in infrastructure, always spending 5% of their investments into that">{{ govForm.InfrastructureInvest|as_crispy_field }} <td>
+                </tr>
+                <tr>
+                  <td data-toggle="tooltip" title="- Science spending (ScienceInvest) improves the efficiency of your country's production processes, by paying scientists. The way it works is that there are 3 kinds of science: Theoretical, Practical and Applied. Applied is what actually determines the efficiency of your production processes; and furthermore you can actually adjust how much of your Applied science should go into which production processes. Meanwhile, you need Practical to boost your Applied, and Theoretical to boost your Practical. You can also determine how much of your Science spending should go into which of the 3 categories">{{ govForm.ScienceInvest|as_crispy_field }} <td>
+                    <td data-toggle="tooltip" title="- Interest Rates control the interest paid by corporations and governments for loans. A lower interest rate will result in more borrowing and investment by corporations expanding the economy while a higher rate results in less, contracting the economy. The deposit rate is always 3% below the interest rate set here.">{{ govForm.Interest_Rate|as_crispy_field }} <td>
+                      <td data-toggle="tooltip" title="Investment Restrictions are effectively a tariff on foreign investments from the population of other countries. You don't (currently) get revenues from that, though">{{ govForm.investment_restriction|as_crispy_field }} <td>
+                </tr>
+              </tbody>
+              </table>
+            <p class="text-secondary">Each value is a percentage in decimal form.</p>
+            <legend class="border-bottom mb-4">Ready for next turn?</legend>
+            {{ readyForm |crispy }}
+        </fieldset>
+        <div class="form-group">
+            <button class="btn btn-outline-info" type="submit">Submit Spending and Tax Plan</button>
+        </div>
+    </form>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+
+<script type="text/javascript">
+
+  const verticalLinePlugin = {
+  getLinePosition: function (chart, pointIndex) {
+      const meta = chart.getDatasetMeta(0); // first dataset is used to discover X coordinate of a point
+      const data = meta.data;
+      return data[pointIndex]._model.x;
+  },
+  renderVerticalLine: function (chartInstance, pointIndex) {
+      const lineLeftOffset = this.getLinePosition(chartInstance, pointIndex);
+      const scale = chartInstance.scales['y-axis-0'];
+      const context = chartInstance.chart.ctx;
+
+      // render vertical line
+      context.beginPath();
+      context.strokeStyle = '#ff0000';
+      context.moveTo(lineLeftOffset, scale.top);
+      context.lineTo(lineLeftOffset, scale.bottom);
+      context.stroke();
+
+      // write label
+      context.fillStyle = "#ff0000";
+      context.textAlign = 'top';
+      context.fillText(' Current Year', lineLeftOffset, (scale.bottom - scale.top) / 2 + scale.top);
+  },
+
+  afterDatasetsDraw: function (chart, easing) {
+      if (chart.config.lineAtIndex) {
+          chart.config.lineAtIndex.forEach(pointIndex => this.renderVerticalLine(chart, pointIndex));
+      }
+  }
+  };
+
+  function handleClick(e, legendItem, legend) {
+    const index = legendItem.datasetIndex;
+    const ci = legend.chart;
+    var count = 0
+    for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+            if (!ci.isDatasetVisible(i)) {
+              count++;
+            }
+        }
+    if (ci.isDatasetVisible(index) && count == legend.chart.data.datasets.length - 1) {
+      for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+            ci.show(i);
+        }
+        legendItem.hidden = false;
+    } else if (ci.isDatasetVisible(index)) {
+        for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+          if (i != legendItem.datasetIndex) {
+            ci.hide(i);
+          }
+        }
+        legendItem.hidden = true;
+    } else {
+        ci.show(index);
+        legendItem.hidden = false;
+    }
+}
+
+
+// Removes the alpha channel from background colors
+function handleLeave(evt, item, legend) {
+  for (var i = 0; i < legend.chart.data.datasets.length; i++) {
+    legend.chart.show(i) //.data.datasets[i].borderColor = legend.chart.data.datasets[i].borderColor.replace(/[^,]+(?=\))/, '1.0')
+  }
+  legend.chart.update();
+}
+
+  Chart.register({id: 'verticallineplugin', verticalLinePlugin});
+
+/*const data = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Unemployment',
+    data: {{ unemployment_graph|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};*/
+
+/*var config = {
+  type: 'line',
+  data: data,
+  options: {
+        responsive: true
+      },
+  lineAtIndex: [{{curr_year}}],
+};
+
+/*const data2 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Inflation',
+    data: {{ inflation_graph|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+var goods_graph = {
+  type: 'line',
+  data: data2,
+  options: {
+        responsive: true
+      },
+  lineAtIndex: [{{curr_year}}],
+};
+const data3 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'GoodsPerCapita',
+    data: {{ gdppercapita_graph|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+var gdp_graph = {
+  type: 'line',
+  data: data3,
+  options: {
+        responsive: true,
+      },
+  lineAtIndex: [{{curr_year}}],
+};
+
+const data5 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'GDP Per Capita',
+    data: {{ gdppercapita_graph|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+
+var growth3 = {
+  type: 'line',
+  data: data5,
+  options: {
+        responsive: true,
+      },
+  lineAtIndex: [{{curr_year}}],
+};
+
+const data4 = {
+  labels: {{ labels|safe }},
+  datasets: [{
+    label: 'Consumtpion Per Capita',
+    data: {{ consumptionpercapita_graph|safe }},
+    fill: false,
+    borderColor: 'rgb(75, 192, 192)',
+    tension: 0.1
+  }]
+};
+
+
+var growth2 = {
+  type: 'line',
+  data: data4,
+  options: {
+        responsive: true,
+      },
+  lineAtIndex: [{{curr_year}}],
+};*/
+
+var graph_dict = {{graph_dict|safe}};
+var graph_array = [];
+var index = 0;
+for (const title of graph_dict['title']) {
+  var dataset = [];
+  for (var i=0; i < graph_dict['line_titles'][index].length; i++) {
+    const temp = {
+      label: graph_dict['line_titles'][index][i],
+      data: graph_dict['data'][index][i],
+      fill: false,
+      borderColor: graph_dict['colors'][index][i],
+      tension: 0.1
+    };
+    dataset.push(temp);
+  };
+  var data5 = {
+  labels: {{ labels|safe }},
+  datasets: dataset
+  };
+  var graph = {
+  type: 'line',
+  data: data5,
+  options: {
+        responsive: true,
+        
+        plugins: {
+          title: {
+            display: true,
+            text: title
+        },
+        legend: {
+                labels: {
+                  font: {
+                        size: 8
+                    }
+                },
+                position:'right',
+                onClick: handleClick
+              },
+      },
+        
+
+    }
+  };
+  graph_array.push(graph);
+  index += 1;
+};
+
+window.onload = function() {
+  /*var ctx = document.getElementById('unemployment-chart').getContext('2d');
+      window.unemployment = new Chart(ctx, config);
+      var ctx = document.getElementById('goods-chart').getContext('2d');
+      window.goods = new Chart(ctx, goods_graph);
+      var ctx = document.getElementById('gdp-chart').getContext('2d');
+      window.gdp = new Chart(ctx, gdp_graph);
+      var ctx = document.getElementById('gdp-per-chart').getContext('2d');
+      window.growth = new Chart(ctx, growth3);
+      var ctx = document.getElementById('growth-chart').getContext('2d');
+      window.growth = new Chart(ctx, growth2);*/
+      var index = 0;
+      for (const graph of graph_array) {
+        var ctx = document.getElementById(graph_dict['title'][index]).getContext('2d');
+        window.goods = new Chart(ctx, graph);
+        index += 1;
+      };
+    };
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip()
+})
+</script>
+
+<!--Javascript-->
+
+{% endblock extra_js %}
